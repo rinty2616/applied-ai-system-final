@@ -1,0 +1,18 @@
+flowchart TD
+    A["Pet Owner"] --> B["Streamlit Interface: app.py"]
+    B --> C["Owner, Pet and Task Data"]
+    B --> D["SmartPlanner: smart_planner.py"]
+    C --> E["Scheduler: pawpal_system.py"]
+    D --> E
+    E --> F["Priority-Based Daily Plan"]
+    F --> G["Verify Time Budget and Overlaps"]
+    G --> H{"Verification Passed?"}
+    H -->|Yes| I["Show Verified Schedule"]
+    H -->|No| J["Show Verification Issues"]
+    F --> K["Explain Skipped Tasks"]
+    I --> B
+    J --> B
+    K --> B
+    D --> L["Application Logs"]
+    M["Pytest Reliability Tests"] --> D
+    M --> E
