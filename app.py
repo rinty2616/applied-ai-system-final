@@ -5,6 +5,7 @@ from datetime import date, datetime
 import streamlit as st
 
 from pawpal_system import Owner, Pet, Scheduler, Task
+from smart_planner import SmartPlanner
 
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="wide")
@@ -189,32 +190,40 @@ if pending:
         st.rerun()
 
 st.divider()
-st.subheader("4 · Build smart daily plan")
-st.caption("The scheduler selects high-priority tasks first, honors fixed start times, and respects the daily time budget.")
-conflicts = scheduler.detect_conflicts(day)
-for warning in conflicts:
+
+st.subheader("4 · Verified Smart Planner")
+st.caption("Plan, verify, and explain daily pet-care tasks.")
+
+for warning in scheduler.detect_conflicts(day):
     st.warning(warning)
 
-if st.button("🗓️ Generate daily plan", type="primary"):
-    plan, skipped = scheduler.build_daily_plan(day)
-    if plan:
-        used = sum(task.duration_minutes for _, task in plan)
-        st.success(f"Scheduled {len(plan)} tasks: {used}/{owner.daily_available_minutes} available minutes.")
-        st.table(
-            [
-                {
-                    "Start": task.time,
-                    "Pet": pet.name,
-                    "Task": task.title,
-                    "Duration": f"{task.duration_minutes} min",
-                    "Why selected": f"{task.priority.title()} priority; fits available time",
-                }
-                for pet, task in plan
-            ]
-        )
-    else:
-        st.info("No pending tasks fit this date and time budget.")
-    for reason in skipped:
-        st.warning(reason)
+if st.button("Generate verified smart plan", type="primary"):
+    result = SmartPlanner(owner).create_plan(day)
 
-st.caption("PawPal+ uses a transparent, priority-first scheduling algorithm. It does not automatically move a task to a different time.")
+    if result["verified"]:
+        st.success(
+            f"Verification PASSED — "
+            f"{result['total_minutes']} minutes scheduled."
+        )
+
+        if result["schedule"]:
+            st.write("### Recommended schedule")
+            for item in result["schedule"]:
+                st.write("✅", item)
+        else:
+            st.info("No tasks could be scheduled for this date.")
+    else:
+        st.error("Verification FAILED. Review the issues below.")
+        for issue in result["issues"]:
+            st.error(issue)
+
+    if result["skipped"]:
+        st.write("### Skipped tasks and explanations")
+        for reason in result["skipped"]:
+            st.warning(reason)
+
+st.caption(
+    "The planner uses transparent scheduling rules and "
+    "independent verification. It does not automatically "
+    "change task times or use a generative AI model."
+)
