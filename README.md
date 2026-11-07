@@ -1,151 +1,228 @@
-# 🐾 PawPal+
 
-**PawPal+** is a Python and Streamlit pet-care planner. One owner can manage multiple pets, schedule walks/feedings/medications, prioritize tasks, and view a daily plan that respects a limited time budget. The backend is built with four object-oriented classes and verified by a CLI demo and automated tests.
+# PawPal+ Smart Planner
+## CodePath AI110 — Applied AI System Final Project
 
-## Features
+### Project Summary
 
-- **Multi-pet management:** The `Owner` keeps a list of `Pet` objects; each pet stores its own tasks. `Owner.get_all_tasks()` supplies every pet's tasks to the scheduler.
-- **Task details:** Scheduled date, start time, duration, priority (`high`, `medium`, `low`), recurrence (`once`, `daily`, `weekly`), and completion status.
-- **Add and edit tasks:** Forms in the Streamlit app add pets and tasks or edit an existing task.
-- **Sort by time:** `Scheduler.sort_by_time()` returns tasks in chronological order.
-- **Filter:** `Scheduler.filter_tasks()` can select a date, pet name, and completion status.
-- **Conflict warnings:** `Scheduler.detect_conflicts()` identifies overlapping *unfinished* tasks, including tasks for different pets.
-- **Recurring care:** `Scheduler.mark_task_complete()` marks an occurrence complete and adds a new daily or weekly task dated 1 or 7 days later; one-time tasks do not repeat.
-- **Daily plan:** `Scheduler.build_daily_plan()` selects high-priority work first, then uses the owner's preferred part of day to break same-priority ties. It respects the time budget and avoids simultaneous activities. Accepted tasks display in chronological order. Skipped tasks receive an explanation.
-- **Session memory:** Streamlit's `st.session_state` keeps owner, pets, and tasks available while using the app within the same browser session.
+PawPal+ Smart Planner is a Python and Streamlit application that helps pet owners organize daily care activities. It prioritizes tasks, detects overlapping schedules, respects daily time limits, and explains scheduling decisions.
 
-## System architecture
+This project extends my original Module 2 PawPal+ application with a reliability and verification workflow.
 
-| Class | Purpose |
-|---|---|
-| `Task` | One care activity, validation, completion status, start/end timestamps |
-| `Pet` | A named pet and its tasks |
-| `Owner` | Pet registry and shared daily time budget/preferences; aggregates tasks across pets |
-| `Scheduler` | Cross-pet filtering, time sorting, conflict warnings, recurrence, daily planning |
+### Original Project — Module 2
 
-See `diagrams/uml_draft.mmd` and `diagrams/uml_final.mmd`. Paste either file's contents into [Mermaid Live Editor](https://mermaid.live/) to see the diagram.
+My original project was PawPal+, a pet-care management system built with Python and Streamlit. It allowed owners to register pets, schedule activities, set priorities, identify conflicts, and manage recurring tasks.
 
-## Setup (Mac / Linux)
+The original system used object-oriented Python classes: Owner, Pet, Task, and Scheduler.
 
-Requires Python 3.10+ (Python 3.11 or newer recommended).
+### New Features
+
+- Verified Smart Planner
+- Priority-based scheduling
+- Conflict detection
+- Daily time-budget verification
+- Explanations for skipped tasks
+- Application logging
+- Automated reliability testing
+- Streamlit user interface
+
+### Advanced Feature: Reliability and Verification
+
+The system uses a Plan, Verify, Explain workflow.
+
+1. PLAN: The Scheduler creates a daily schedule using task priorities and available time.
+2. VERIFY: The Smart Planner independently checks the selected schedule for overlaps and budget violations.
+3. EXPLAIN: The application displays the selected tasks, skipped tasks, and verification results.
+
+This system uses transparent rule-based planning. It does not use a generative language model, RAG, or an external AI API.
+
+### System Architecture
+
+The application consists of:
+
+- app.py — Streamlit user interface
+- pawpal_system.py — Pet, Owner, Task, and Scheduler classes
+- smart_planner.py — Planning verification and explanation
+- test_smart_planner.py — Reliability tests
+
+The architecture diagram is saved in:
+
+`diagrams/architecture.mmd`
+
+### Setup Instructions
+
+Requirements:
+- Python 3.10 or newer
+- pip
+- Git
+
+Clone the repository:
+
+```bash
+git clone https://github.com/rinty2616/applied-ai-system-final.git
+cd applied-ai-system-final
+```
+
+Create and activate a virtual environment:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
+```
+
+Install dependencies:
+
+```bash
 python -m pip install --upgrade pip
 pip install -r requirements.txt
+pip install pytest
 ```
 
-On Windows PowerShell, activate with `.\.venv\Scripts\Activate.ps1` instead.
-
-### Run the CLI demo
+Run the application:
 
 ```bash
-python main.py
+python -m streamlit run app.py
 ```
 
-### Run the web app
+Open http://localhost:8501 in your browser.
+
+### Sample Interactions
+
+#### Example 1 — Scheduling Conflict
+
+Input:
+
+```text
+Pet: Bella
+Task: Morning Walk
+Time: 08:00
+Duration: 30 minutes
+Priority: High
+
+Pet: Luna
+Task: Breakfast
+Time: 08:15
+Duration: 15 minutes
+Priority: Medium
+```
+
+Observed output:
+
+```text
+Verification PASSED — 30 minutes scheduled.
+
+Recommended schedule:
+Bella: Morning Walk at 08:00 (high priority)
+
+Skipped:
+Luna's Breakfast overlaps Bella's Morning Walk.
+```
+
+#### Example 2 — No Scheduling Conflict
+
+Input:
+
+```text
+Daily time budget: 60 minutes
+Bella: Morning Walk, 08:00, 30 minutes
+Luna: Breakfast, 09:00, 15 minutes
+```
+
+Expected output:
+
+```text
+Verification PASSED
+Total scheduled minutes: 45
+Both tasks selected
+No skipped tasks
+```
+
+#### Example 3 — Insufficient Time Budget
+
+Input:
+
+```text
+Daily time budget: 20 minutes
+Bella: Morning Walk, 08:00, 30 minutes
+```
+
+Expected output:
+
+```text
+Verification PASSED
+Total scheduled minutes: 0
+Morning Walk skipped because it exceeds the time budget.
+```
+
+### Reliability Testing
+
+The project uses pytest to test its scheduling and verification logic.
+
+Run all tests:
 
 ```bash
-streamlit run app.py
+python -m pytest -q
 ```
 
-The app opens in your browser. The Streamlit demo keeps information for the current browser session and does **not** save to a database.
+The original project passed 14 tests.
 
-## Sample Output
+Three additional tests cover:
 
-Actual output from `python main.py`:
+1. Valid schedule verification
+2. Scheduling conflict handling
+3. Daily time-budget enforcement
 
-```text
-Today's Schedule - 2026-10-18
-  08:00 | Bella | Morning walk  | high | 30 min
-  08:00 | Luna  | Breakfast     | medium | 10 min
-  09:00 | Luna  | Medication    | high | 10 min
-  15:30 | Bella | Grooming      | low | 20 min
+The combined suite passed 17 tests.
 
-Conflict warnings:
-  WARNING: Conflict on 2026-10-18: Bella's 'Morning walk' at 08:00 overlaps Luna's 'Breakfast' at 08:00.
+Test evidence is saved in:
 
-Generated daily plan (60-minute budget):
-  08:00 | Bella: Morning walk (high, 30 min)
-  09:00 | Luna: Medication (high, 10 min)
-  15:30 | Bella: Grooming (low, 20 min)
-  NOTE: Skipped Luna's 'Breakfast': overlaps Bella's 'Morning walk' (higher/equal selection priority).
+- evidence/baseline_tests.txt
+- evidence/smart_planner_tests.txt
 
-Completed 'Morning walk'. Next occurrence: 2026-10-19 at 08:00
-```
+### Design Decisions and Trade-offs
 
-## Smarter Scheduling
+I reused the existing Scheduler to avoid duplicating scheduling logic.
 
-| Feature | Method | Behavior |
-|---|---|---|
-| Sorting | `Scheduler.sort_by_time()` | Sorts by date and `HH:MM` time; ties use priority |
-| Filtering | `Scheduler.filter_tasks()` | Filters by date, pet, or completed/pending |
-| Conflict detection | `Scheduler.detect_conflicts()` | Warns when unfinished tasks on the same date overlap by duration |
-| Recurring tasks | `Scheduler.mark_task_complete()` | Completes the current task and creates another for tomorrow or next week |
-| Daily plan | `Scheduler.build_daily_plan()` | Uses priority, preferred time of day, limited minutes, and nonoverlapping time slots |
+I added independent verification to check that selected tasks satisfy basic scheduling constraints.
 
-**Planning logic:** High-priority tasks are considered first. Within one priority level, the owner's preferred daypart (`any`, `morning`, `afternoon`, `evening`) is considered before start time. If a task exceeds the remaining daily budget or overlaps a previously accepted task, it is skipped with a reason. The final plan is sorted chronologically, not by priority.
+The planner follows a simple priority-based approach rather than a complex optimization algorithm. This makes its decisions easier to understand, but may not always produce the best possible schedule.
 
-**Tradeoffs / limits:** This is a clear greedy scheduler, not a mathematical optimizer. It does not relocate tasks to new time slots, and it may not produce the maximum possible number of tasks. Conflicts are checked within each scheduled date, not across the midnight boundary. The UI saves data in memory only.
+### Guardrails and Error Handling
 
-## Testing PawPal+
+- Task input validation
+- Positive task-duration requirements
+- Valid time formatting
+- Priority validation
+- Conflict prevention
+- Daily time-budget checks
+- Verification results
+- Logging of planner activity
 
-```bash
-python -m pytest
-```
+### Limitations
 
-The automated tests cover task completion/addition, multiple pets, time sorting, filtering, daily and weekly recurrence, duplicate recurrence prevention, exact-time and interval conflicts, back-to-back tasks, budget/priority selection, preferences, empty owners, and invalid inputs.
+- The planner does not automatically move tasks to new times.
+- It does not use a generative AI model.
+- Data is stored in Streamlit session memory, not a permanent database.
+- It does not guarantee the optimal schedule.
+- Some unusual scheduling cases require additional testing.
 
-A successful local test run with `python -m pytest` produced:
+### Testing Summary
 
-```text
-=================== test session starts ====================
-platform darwin -- Python 3.13.15, pytest-9.1.1, pluggy-1.7.0
-rootdir: /Users/rintykawsar/Desktop/ai110-module2show-pawpal-starter
-plugins: anyio-4.15.1
-collected 14 items
+The system successfully selected higher-priority tasks, skipped conflicting activities, and verified scheduled durations.
 
-tests/test_pawpal.py ..............                  [100%]
+Further improvements could include automatic task rescheduling, persistent data storage, and more extensive reliability testing.
 
-==================== 14 passed in 0.02s ====================
+### Reflection
 
-============================== 14 passed in 0.03s ==============================
-```
+This project helped me understand how to extend an existing Python application into a more reliable system.
 
-**Confidence level:** ★★★★☆ (4/5). The core Python logic has automated tests, but browser-based Streamlit interaction and persistent storage are not covered by the automated suite.
+I practiced modular programming, verification, debugging, testing, and documenting technical decisions.
 
-## Demo Walkthrough
+The detailed responsible-AI reflection and model limitations are documented separately in `model_card.md`.
 
-1. Run `streamlit run app.py` and enter your owner's name and available minutes in the sidebar. Optionally choose a preferred time of day.
-2. Add **Bella (dog)** and **Luna (cat)** using the pet form.
-3. Schedule Bella's **Morning walk** for 08:00, high priority, 30 minutes; and Luna's **Breakfast** for 08:00, medium priority, 10 minutes.
-4. Add Luna's **Medication** at 09:00 and set it to repeat daily.
-5. On the schedule date, the app lists tasks in time order and warns about the two 08:00 activities overlapping. Click **Generate daily plan** to view selected tasks and any skipped reasons.
-6. Mark Medication complete. The current occurrence becomes completed and a new one is created for the following day.
-7. Use the **Edit an existing task** expander to change a task's date, duration, priority, or frequency.
+### Project Repository
 
-See the **Sample Output** above for CLI evidence, which can be reproduced without the web UI.
+https://github.com/rinty2616/applied-ai-system-final
 
-## Project files
+### Author
 
-```text
-PawPal_Plus_Project/
-├── app.py
-├── pawpal_system.py
-├── main.py
-├── requirements.txt
-├── tests/
-│   └── test_pawpal.py
-├── diagrams/
-│   ├── uml_draft.mmd
-│   └── uml_final.mmd
-├── README.md
-├── reflection.md
-├── ai_interactions.md
-└── SETUP_GUIDE.md
-```
-
-## Using the assignment's GitHub starter
-
-The recommended submission path is to **fork CodePath's original starter repository**, clone your fork, then put the completed files from this example into that cloned folder. Keep the fork's `.git/` folder. Commit meaningful changes to your own fork and push them before submitting. See `SETUP_GUIDE.md`.
+CodePath AI110 — Fall 2026
