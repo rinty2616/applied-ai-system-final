@@ -226,3 +226,15 @@ https://github.com/rinty2616/applied-ai-system-final
 ### Author
 
 CodePath AI110 — Fall 2026
+
+### Verified Example Outputs
+
+Actual Smart Planner results from November 7, 2026:
+
+```text
+EXAMPLE 2: No scheduling conflict
+{'date': '2026-11-07', 'verified': True, 'total_minutes': 45, 'schedule': ['Bella: Morning Walk at 08:00 (high priority)', 'Luna: Breakfast at 09:00 (medium priority)'], 'skipped': [], 'issues': []}
+
+EXAMPLE 3: Insufficient time budget
+{'date': '2026-11-07', 'verified': True, 'total_minutes': 0, 'schedule': [], 'skipped': ["Skipped Bella's 'Morning Walk': exceeds the 20-minute daily budget."], 'issues': []}
+```
